@@ -291,6 +291,9 @@ Inbound Rules:
 Type          Protocol  Port   Source
 ─────────────────────────────────────────
 SSH           TCP       22     0.0.0.0/0
+All ICMP-v4   ICMP      All    0.0.0.0/0
+Custom UDP    UDP       4500   0.0.0.0/0
+Custom UDP    UDP       500    0.0.0.0/0
 All Traffic   All       All    0.0.0.0/0
 ─────────────────────────────────────────
 
@@ -376,9 +379,8 @@ Inbound Rules:
 ─────────────────────────────────────────
 Type              Protocol  Port  Source
 ─────────────────────────────────────────
-All ICMP - IPv4   ICMP      All   10.10.0.0/16
-All ICMP - IPv4   ICMP      All   10.20.0.0/16
-SSH               TCP       22    10.10.0.0/16
+All ICMP - IPv4   ICMP      All   0.0.0.0/0
+SSH               TCP       22    0.0.0.0/0
 ─────────────────────────────────────────
 
 Outbound Rules:
@@ -419,8 +421,7 @@ Inbound Rules:
 ─────────────────────────────────────────
 Type              Protocol  Port  Source
 ─────────────────────────────────────────
-All ICMP - IPv4   ICMP      All   10.10.0.0/16
-All ICMP - IPv4   ICMP      All   10.20.0.0/16
+All ICMP - IPv4   ICMP      All   0.0.0.0/0
 All Traffic       All       All   10.10.0.0/16
 ─────────────────────────────────────────
 
@@ -624,38 +625,27 @@ ssh -i your-key.pem ubuntu@YOUR-ELASTIC-IP
 ### Step 23 — Install StrongSwan
 
 ```bash
-sudo apt update -y
-sudo apt install strongswan -y
+sudo apt update
+sudo apt install strongswan strongswan-starter -y
 ```
 
 ---
+### Check IPsec version
 
+```bash
+ipsec version
+```
+---
 ### Step 24 — Enable IP Forwarding
 
 ```bash
-sudo nano /etc/sysctl.conf
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-ipforward.conf
 ```
 
-Find and uncomment OR add these lines:
-
-```
-net.ipv4.ip_forward = 1
-net.ipv4.conf.all.accept_redirects = 0
-net.ipv4.conf.all.send_redirects = 0
-net.ipv4.conf.default.rp_filter = 0
-net.ipv4.conf.all.rp_filter = 0
-```
-
-Apply immediately:
-
+### Check if it works
+ 
 ```bash
-sudo sysctl -p
-```
-
-Verify:
-
-```bash
-cat /proc/sys/net/ipv4/ip_forward
+sysctl net.ipv4.ip_forward
 ```
 
 **Must show: 1**
@@ -725,9 +715,9 @@ YOUR_ELASTIC_IP AWS_TUNNEL1_OUTSIDE_IP : PSK "PreSharedKeyFromConfigFile"
 ### Step 27 — Start StrongSwan
 
 ```bash
-sudo systemctl enable strongswan
-sudo systemctl restart strongswan
+sudo systemctl restart strongswan-starter
 sudo ipsec restart
+sudo ipsec statusall
 ```
 
 Wait 10 seconds then check:
@@ -770,7 +760,7 @@ Must show:
 
 ---
 
-### Step 29 — Make Route Permanent
+### Step 29 — Make Route Permanent (Optional)
 
 ```bash
 sudo nano /etc/rc.local
@@ -806,7 +796,11 @@ Run all these on VPN Appliance:
 
 ```bash
 # Check 1 - IP forwarding enabled
-cat /proc/sys/net/ipv4/ip_forward
+
+```bash
+sysctl net.ipv4.ip_forward
+```
+
 # Must show: 1
 
 # Check 2 - Tunnel established
@@ -827,32 +821,6 @@ ping 10.20.1.x -c 5
 ```
 
 ---
-
-## PART 8 — VERIFY FROM AWS SIDE
-
-### Step 31 — Connect to AWS Private EC2
-
-```
-EC2
-→ AWS-Private-EC2
-→ Connect
-→ EC2 Instance Connect
-→ Connect
-```
-
-Run:
-
-```bash
-# Check firewall is off
-sudo ufw status
-# If active: sudo ufw disable
-
-# Ping back to VPN Appliance
-ping 10.10.1.21 -c 5
-
-# Ping OnPrem Private EC2
-ping 10.10.2.x -c 5
-```
 
 ---
 
