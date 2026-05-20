@@ -742,6 +742,8 @@ aws-vpn{1}: 10.10.0.0/16 === 10.20.0.0/16
 
 ```bash
 sudo ip route add 10.20.0.0/16 via 10.10.1.1 dev enX0
+
+sudo ip route add 10.10.2.0/24 via 10.10.1.1 dev enX0
 ```
 
 Verify:
