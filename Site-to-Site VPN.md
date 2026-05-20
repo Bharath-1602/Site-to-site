@@ -762,37 +762,9 @@ Must show:
 
 ---
 
-### Step 29 — Make Route Permanent (Optional)
-
-```bash
-sudo nano /etc/rc.local
-```
-
-If file doesn't exist, create it:
-
-```bash
-sudo nano /etc/rc.local
-```
-
-Paste:
-
-```bash
-#!/bin/bash
-sleep 10
-ip route add 10.20.0.0/16 via 10.10.1.1 dev enX0 2>/dev/null || true
-exit 0
-```
-
-```bash
-sudo chmod +x /etc/rc.local
-sudo systemctl enable rc-local
-```
-
----
-
 ## PART 7 — VERIFY EVERYTHING
 
-### Step 30 — Full Verification Checklist
+### Step 29 — Full Verification Checklist
 
 Run all these on VPN Appliance:
 
@@ -801,7 +773,6 @@ Run all these on VPN Appliance:
 
 ```bash
 sysctl net.ipv4.ip_forward
-```
 
 # Must show: 1
 
@@ -813,9 +784,8 @@ sudo ipsec statusall
 ip route | grep 10.20
 # Must show: 10.20.0.0/16 via 10.10.1.1 dev enX0
 
-# Check 4 - XFRM policies installed
-sudo ip xfrm policy
-# Must show both directions
+# Check 4 - SSH into OnPrem-Private-EC2
+ssh -i yourkey.pem ubuntu@10.10.2.X (Private ip of onPrem-private-ec2)
 
 # Check 5 - Ping AWS Private EC2
 ping 10.20.1.x -c 5
